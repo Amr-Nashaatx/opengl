@@ -2,55 +2,27 @@ package main
 
 import (
 	"fmt"
-	"log"
-	"runtime"
 
+	"github.com/Amr-Nashaatx/opengl/window"
 	"github.com/go-gl/gl/v4.1-core/gl"
 	"github.com/go-gl/glfw/v3.3/glfw"
 )
 
-const (
-	windowWidth  = 800
-	windowHeight = 600
-	windowTitle  = "LearnOpenGL in Go"
-)
-
-func init() {
-	runtime.LockOSThread()
-}
-
 func main() {
-	// 1. Initialize GLFW
-	if err := glfw.Init(); err != nil {
-		log.Fatalln("Failed to initialize GLFW:", err)
-	}
+
+	wndProps := &window.WindowProps{Height: 600, Width: 800, Title: "LearnOpenGL in Go"}
+	wnd := window.CreateWindow(wndProps)
+
 	defer glfw.Terminate()
-
-	// 2. Configure the window
-	glfw.WindowHint(glfw.ContextVersionMajor, 4)
-	glfw.WindowHint(glfw.ContextVersionMinor, 1)
-	glfw.WindowHint(glfw.OpenGLProfile, glfw.OpenGLCoreProfile)
-	glfw.WindowHint(glfw.OpenGLForwardCompatible, glfw.True)
-
-	// 3. Create the window
-	window, err := glfw.CreateWindow(windowWidth, windowHeight, windowTitle, nil, nil)
-	if err != nil {
-		log.Fatalln("Failed to create window:", err)
-	}
-	window.MakeContextCurrent()
-
-	// 4. Initialize OpenGL
-	if err := gl.Init(); err != nil {
-		log.Fatalln("Failed to initialize OpenGL:", err)
-	}
-
-	// 5. Set the viewport
-	gl.Viewport(0, 0, windowWidth, windowHeight)
-
 	vertices := []float32{
-		-0.5, -0.5, 0.0,
+		0.5, 0.5, 0.0,
 		0.5, -0.5, 0.0,
-		0.0, 0.5, 0.0,
+		-0.5, -0.5, 0.0,
+		-0.5, 0.5, 0.0,
+	}
+	indicies := []uint32{
+		0, 1, 3,
+		1, 2, 3,
 	}
 
 	// create the vertex array object that stores all vertex attribute config
@@ -66,6 +38,12 @@ func main() {
 	gl.GenBuffers(1, &VBO)
 	gl.BindBuffer(gl.ARRAY_BUFFER, VBO)
 	gl.BufferData(gl.ARRAY_BUFFER, len(vertices)*4, gl.Ptr(vertices), gl.STATIC_DRAW)
+
+	// Element Buffer
+	var EBO uint32
+	gl.GenBuffers(1, &EBO)
+	gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, EBO)
+	gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, len(indicies)*4, gl.Ptr(indicies), gl.STATIC_DRAW)
 
 	// specify the layout of vertex attributes in bound VBO
 	gl.VertexAttribPointer(0, 3, gl.FLOAT, false, 12, nil)
@@ -137,20 +115,21 @@ func main() {
 	gl.DeleteShader(vertexShader)
 	gl.DeleteShader(fragmentShader)
 
+	// gl.PolygonMode(gl.FRONT_AND_BACK, gl.LINE) --> for wireframe mode
 	// 6. The render loop
-	for !window.ShouldClose() {
+	for !wnd.ShouldClose() {
 		// Check for keyboard/mouse events
 		glfw.PollEvents()
-
-		// Clear the screen with a dark green-ish color
+		//ear the screen with a dark green-ish color
 		gl.ClearColor(0.2, 0.3, 0.3, 1.0)
 		gl.Clear(gl.COLOR_BUFFER_BIT)
 
 		gl.UseProgram(shaderProgram)
 		gl.BindVertexArray(VAO)
-		gl.DrawArrays(gl.TRIANGLES, 0, 3)
+		// gl.DrawArrays(gl.TRIANGLES, 0, 3)
+		gl.DrawElements(gl.TRIANGLES, 6, gl.UNSIGNED_INT, nil)
 
 		// Show what we drew
-		window.SwapBuffers()
+		wnd.SwapBuffers()
 	}
 }
