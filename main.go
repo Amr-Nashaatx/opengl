@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 
+	"github.com/Amr-Nashaatx/opengl/bos"
 	"github.com/Amr-Nashaatx/opengl/window"
 	"github.com/go-gl/gl/v4.1-core/gl"
 	"github.com/go-gl/glfw/v3.3/glfw"
@@ -12,7 +13,6 @@ func main() {
 
 	wndProps := &window.WindowProps{Height: 600, Width: 800, Title: "LearnOpenGL in Go"}
 	wnd := window.CreateWindow(wndProps)
-
 	defer glfw.Terminate()
 	vertices := []float32{
 		0.5, 0.5, 0.0,
@@ -25,26 +25,10 @@ func main() {
 		1, 2, 3,
 	}
 
-	// create the vertex array object that stores all vertex attribute config
-	var VAO uint32
-	gl.GenVertexArrays(1, &VAO)
+	bos.CreateAndBindVAO()
 
-	// bind the vertex array
-	gl.BindVertexArray(VAO)
-	// 1 - generate a buffer object, hold its identifier in VBO var
-	// 2 - Tell opengl to take the buffer created and bind it to ARRAY_BUFFER which is the vertex buffer object
-	// 3 - Send the data to the created buffer which resides on GPU memory
-	var VBO uint32
-	gl.GenBuffers(1, &VBO)
-	gl.BindBuffer(gl.ARRAY_BUFFER, VBO)
-	gl.BufferData(gl.ARRAY_BUFFER, len(vertices)*4, gl.Ptr(vertices), gl.STATIC_DRAW)
-
-	// Element Buffer
-	var EBO uint32
-	gl.GenBuffers(1, &EBO)
-	gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, EBO)
-	gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, len(indicies)*4, gl.Ptr(indicies), gl.STATIC_DRAW)
-
+	bos.CreateAndBindVBO(vertices)
+	bos.CreateAndBindEBO(indicies)
 	// specify the layout of vertex attributes in bound VBO
 	gl.VertexAttribPointer(0, 3, gl.FLOAT, false, 12, nil)
 	gl.EnableVertexAttribArray(0)
@@ -125,7 +109,6 @@ func main() {
 		gl.Clear(gl.COLOR_BUFFER_BIT)
 
 		gl.UseProgram(shaderProgram)
-		gl.BindVertexArray(VAO)
 		// gl.DrawArrays(gl.TRIANGLES, 0, 3)
 		gl.DrawElements(gl.TRIANGLES, 6, gl.UNSIGNED_INT, nil)
 
