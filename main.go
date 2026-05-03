@@ -6,6 +6,7 @@ import (
 	"github.com/Amr-Nashaatx/opengl/window"
 	"github.com/go-gl/gl/v4.1-core/gl"
 	"github.com/go-gl/glfw/v3.3/glfw"
+	"unsafe"
 )
 
 func main() {
@@ -14,24 +15,26 @@ func main() {
 	wnd := window.CreateWindow(wndProps)
 	defer glfw.Terminate()
 	vertices := []float32{
-		0.5, 0.5, 0.0,
-		0.5, -0.5, 0.0,
-		-0.5, -0.5, 0.0,
-		-0.5, 0.5, 0.0,
+		// positions         // colors
+		0.5, -0.5, 0.0, 1.0, 0.0, 0.0, // bottom right
+		-0.5, -0.5, 0.0, 0.0, 1.0, 0.0, // bottom let
+		0.0, 0.5, 0.0, 0.0, 0.0, 1.0, // top
 	}
-	indicies := []uint32{
-		0, 1, 3,
-		1, 2, 3,
-	}
+	// indicies := []uint32{
+	// 	0, 1, 3,
+	// 	1, 2, 3,
+	// }
 
 	bos.CreateAndBindVAO()
-
 	bos.CreateAndBindVBO(vertices)
-	bos.CreateAndBindEBO(indicies)
+	// bos.CreateAndBindEBO(indicies)
 	// specify the layout of vertex attributes in bound VBO
-	gl.VertexAttribPointer(0, 3, gl.FLOAT, false, 12, nil)
+	// 1 - Position attribute
+	gl.VertexAttribPointer(0, 3, gl.FLOAT, false, 24, nil)
 	gl.EnableVertexAttribArray(0)
-
+	// 2 - color attribute
+	gl.VertexAttribPointer(1, 3, gl.FLOAT, false, 24, unsafe.Pointer(uintptr(12)))
+	gl.EnableVertexAttribArray(1)
 	shader := shaders.Shader{}
 	if err := shader.New(); err != nil {
 		panic(err)
@@ -47,8 +50,8 @@ func main() {
 		gl.Clear(gl.COLOR_BUFFER_BIT)
 
 		shader.Use()
-		// gl.DrawArrays(gl.TRIANGLES, 0, 3)
-		gl.DrawElements(gl.TRIANGLES, 6, gl.UNSIGNED_INT, nil)
+		gl.DrawArrays(gl.TRIANGLES, 0, 3)
+		// gl.DrawElements(gl.TRIANGLES, 6, gl.UNSIGNED_INT, nil)
 
 		// Show what we drew
 		wnd.SwapBuffers()
