@@ -89,8 +89,13 @@ func (shader *Shader) Use() {
 	gl.UseProgram(shader.programID)
 }
 
-func (shader *Shader) SetBoolUniform(name string, value bool) {
-	gl.Uniform1i(gl.GetUniformLocation(shader.programID, gl.Str(name)), int32(boolToInt(value)))
+func (shader *Shader) SetBoolUniform(name string, value bool) error {
+	uniformLoc, err := shader.getUniformLoc(name)
+	if err != nil {
+		return err
+	}
+	gl.Uniform1i(uniformLoc, int32(boolToInt(value)))
+	return nil
 }
 
 func boolToInt(b bool) int {
@@ -99,9 +104,27 @@ func boolToInt(b bool) int {
 	}
 	return 0
 }
-func (shader *Shader) SetIntUniform(name string, value int) {
-	gl.Uniform1i(gl.GetUniformLocation(shader.programID, gl.Str(name)), int32(value))
+func (shader *Shader) SetIntUniform(name string, value int) error {
+	uniformLoc, err := shader.getUniformLoc(name)
+	if err != nil {
+		return err
+	}
+	gl.Uniform1i(uniformLoc, int32(value))
+	return nil
 }
-func (shader *Shader) SetFloatUniform(name string, value float32) {
-	gl.Uniform1f(gl.GetUniformLocation(shader.programID, gl.Str(name)), value)
+func (shader *Shader) SetFloatUniform(name string, value float32) error {
+	uniformLoc, err := shader.getUniformLoc(name)
+	if err != nil {
+		return err
+	}
+	gl.Uniform1f(uniformLoc, value)
+	return nil
+}
+func (shader *Shader) getUniformLoc(name string) (int32, error) {
+	cName := gl.Str(name + "\x00")
+	uniformLoc := gl.GetUniformLocation(shader.programID, cName)
+	if uniformLoc == -1 {
+		return -1, fmt.Errorf("Could not get uniform location")
+	}
+	return uniformLoc, nil
 }
