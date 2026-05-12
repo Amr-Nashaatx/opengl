@@ -55,7 +55,8 @@ func main() {
 
 	// gl.PolygonMode(gl.FRONT_AND_BACK, gl.LINE) --> for wireframe mode
 	// Textures
-	textures.LoadTexture("./textures/container.jpg")
+	textures.LoadTexture("./textures/container.jpg", 0)
+	textures.LoadTexture("./textures/awesomeface.png", 1)
 	// 6. The render loop
 	for !wnd.ShouldClose() {
 		// Check for keyboard/mouse events
@@ -65,6 +66,8 @@ func main() {
 		gl.Clear(gl.COLOR_BUFFER_BIT)
 
 		shader.Use()
+		shader.SetIntUniform("Texture1", 0)
+		shader.SetIntUniform("Texture2", 1)
 		// gl.DrawArrays(gl.TRIANGLES, 0, 3)
 		gl.DrawElements(gl.TRIANGLES, 6, gl.UNSIGNED_INT, nil)
 

@@ -4,6 +4,7 @@ import (
 	"github.com/go-gl/gl/v4.1-core/gl"
 	"image"
 	_ "image/jpeg"
+	_ "image/png"
 	"log"
 	"os"
 )
@@ -26,12 +27,23 @@ func loadImage(filePath string) *image.NRGBA {
 		}
 	}
 
-	return rgba
+	return flipVertically(rgba)
+}
+func flipVertically(img *image.NRGBA) *image.NRGBA {
+	bounds := img.Bounds()
+	flipped := image.NewNRGBA(bounds)
+	for y := bounds.Min.Y; y < bounds.Max.Y; y++ {
+		for x := bounds.Min.X; x < bounds.Max.X; x++ {
+			flipped.Set(x, bounds.Max.Y-y-1, img.At(x, y))
+		}
+	}
+	return flipped
 }
 
-func LoadTexture(filePath string) {
+func LoadTexture(filePath string, texUnit uint32) {
 	var texture uint32
 	gl.GenTextures(1, &texture)
+	gl.ActiveTexture(gl.TEXTURE0 + texUnit)
 	gl.BindTexture(gl.TEXTURE_2D, texture)
 
 	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT)
