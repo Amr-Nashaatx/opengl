@@ -3,9 +3,9 @@ package main
 import (
 	"unsafe"
 
-	"github.com/Amr-Nashaatx/opengl/bos"
+	"github.com/Amr-Nashaatx/opengl/glbuffers"
 	"github.com/Amr-Nashaatx/opengl/shaders"
-	textures "github.com/Amr-Nashaatx/opengl/textures"
+	"github.com/Amr-Nashaatx/opengl/textures"
 	"github.com/Amr-Nashaatx/opengl/window"
 	"github.com/go-gl/gl/v4.1-core/gl"
 	"github.com/go-gl/glfw/v3.3/glfw"
@@ -36,9 +36,9 @@ func main() {
 		1, 2, 3,
 	}
 
-	bos.CreateAndBindVAO()
-	bos.CreateAndBindVBO(vertices)
-	bos.CreateAndBindEBO(indicies)
+	glbuffers.CreateAndBindVAO()
+	glbuffers.CreateAndBindVBO(vertices)
+	glbuffers.CreateAndBindEBO(indicies)
 	// specify the layout of vertex attributes in bound VBO
 
 	// 1 - Position attribute
