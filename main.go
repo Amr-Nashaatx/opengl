@@ -9,6 +9,7 @@ import (
 	"github.com/Amr-Nashaatx/opengl/window"
 	"github.com/go-gl/gl/v4.1-core/gl"
 	"github.com/go-gl/glfw/v3.3/glfw"
+	"github.com/go-gl/mathgl/mgl32"
 )
 
 func main() {
@@ -53,6 +54,12 @@ func main() {
 	gl.VertexAttribPointer(2, 2, gl.FLOAT, false, 32, unsafe.Pointer(uintptr(24)))
 	gl.EnableVertexAttribArray(2)
 
+	// Transformation
+	transf := mgl32.Ident4()
+	transf = transf.Mul4(mgl32.HomogRotate3D(float32(glfw.GetTime()), mgl32.Vec3{0, 0, 1}))
+	transf = transf.Mul4(mgl32.Scale3D(0.5, 0.5, 0.5))
+	transf = transf.Mul4(mgl32.Translate3D(0.5, -0.5, 0))
+
 	// gl.PolygonMode(gl.FRONT_AND_BACK, gl.LINE) --> for wireframe mode
 	// Textures
 	textures.LoadTexture("./textures/container.jpg", 0)
@@ -68,6 +75,8 @@ func main() {
 		shader.Use()
 		shader.SetIntUniform("Texture1", 0)
 		shader.SetIntUniform("Texture2", 1)
+		shader.SetMat4Uniform("transform", transf)
+
 		// gl.DrawArrays(gl.TRIANGLES, 0, 3)
 		gl.DrawElements(gl.TRIANGLES, 6, gl.UNSIGNED_INT, nil)
 
