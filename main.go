@@ -54,31 +54,54 @@ func main() {
 	gl.VertexAttribPointer(2, 2, gl.FLOAT, false, 32, unsafe.Pointer(uintptr(24)))
 	gl.EnableVertexAttribArray(2)
 
-	// Transformation
-	transf := mgl32.Ident4()
-	transf = transf.Mul4(mgl32.HomogRotate3D(float32(glfw.GetTime()), mgl32.Vec3{0, 0, 1}))
-	transf = transf.Mul4(mgl32.Scale3D(0.5, 0.5, 0.5))
-	transf = transf.Mul4(mgl32.Translate3D(0.5, -0.5, 0))
+	// Transformation --> Model -> View -> Projection
+	model := mgl32.Ident4()
+	projection := mgl32.Perspective(45, float32(wndProps.Width)/float32(wndProps.Height), 0.1, 100.0)
+	view := mgl32.Translate3D(0.0, 0.0, -3.0)
 
+	// Enable Depth Testing
+	gl.Enable(gl.DEPTH_TEST)
 	// gl.PolygonMode(gl.FRONT_AND_BACK, gl.LINE) --> for wireframe mode
 	// Textures
 	textures.LoadTexture("./textures/container.jpg", 0)
 	textures.LoadTexture("./textures/awesomeface.png", 1)
+
+	// Cube Positions:
+	cubePositions := []mgl32.Vec3{
+		{0.0, 0.0, 0.0},
+		{2.0, 5.0, -15.0},
+		{-1.5, -2.2, -2.5},
+		{-3.8, -2.0, -12.3},
+		{2.4, -0.4, -3.5},
+		{-1.7, 3.0, -7.5},
+		{1.3, -2.0, -2.5},
+		{1.5, 2.0, -2.5},
+		{1.5, 0.2, -1.5},
+		{-1.3, 1.0, -1.5},
+	}
 	// 6. The render loop
 	for !wnd.ShouldClose() {
 		// Check for keyboard/mouse events
 		glfw.PollEvents()
 		//ear the screen with a dark green-ish color
 		gl.ClearColor(0.2, 0.3, 0.3, 1.0)
-		gl.Clear(gl.COLOR_BUFFER_BIT)
+		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
 		shader.Use()
 		shader.SetIntUniform("Texture1", 0)
 		shader.SetIntUniform("Texture2", 1)
-		shader.SetMat4Uniform("transform", transf)
 
-		// gl.DrawArrays(gl.TRIANGLES, 0, 3)
-		gl.DrawElements(gl.TRIANGLES, 6, gl.UNSIGNED_INT, nil)
+		shader.SetMat4Uniform("projection", projection)
+		shader.SetMat4Uniform("view", view)
+		for i := range 10 {
+			model = mgl32.Translate3D(cubePositions[i].X(), cubePositions[i][1], cubePositions[i].Z())
+			angle := float32(20) * float32(i)
+			rotation := mgl32.HomogRotate3D(angle, mgl32.Vec3{1, 0.3, 0.5})
+			model = model.Mul4(rotation)
+			shader.SetMat4Uniform("model", model)
+			gl.DrawElements(gl.TRIANGLES, 6, gl.UNSIGNED_INT, nil)
+		}
+		// gl.DrawArrays(gl.TRIANGLES, 0, 36)
 
 		// Show what we drew
 		wnd.SwapBuffers()
