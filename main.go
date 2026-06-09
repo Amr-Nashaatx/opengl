@@ -57,7 +57,9 @@ func main() {
 	// Transformation --> Model -> View -> Projection
 	model := mgl32.Ident4()
 	projection := mgl32.Perspective(45, float32(wndProps.Width)/float32(wndProps.Height), 0.1, 100.0)
-	view := mgl32.Translate3D(0.0, 0.0, -3.0)
+	cameraPos := mgl32.Vec3{0, 0, 3}
+	cameraFront := mgl32.Vec3{0, 0, -1}
+	cameraUp := mgl32.Vec3{0, 1, 0}
 
 	// Enable Depth Testing
 	gl.Enable(gl.DEPTH_TEST)
@@ -66,8 +68,8 @@ func main() {
 	textures.LoadTexture("./textures/container.jpg", 0)
 	textures.LoadTexture("./textures/awesomeface.png", 1)
 
-	// Cube Positions:
-	cubePositions := []mgl32.Vec3{
+	// plane Positions:
+	planePositions := []mgl32.Vec3{
 		{0.0, 0.0, 0.0},
 		{2.0, 5.0, -15.0},
 		{-1.5, -2.2, -2.5},
@@ -79,10 +81,33 @@ func main() {
 		{1.5, 0.2, -1.5},
 		{-1.3, 1.0, -1.5},
 	}
+	// Frame delta-time
+	lastFrame := float32(0)
+	cameraSpeed := float32(2.5)
 	// 6. The render loop
 	for !wnd.ShouldClose() {
+		currentFrame := float32(glfw.GetTime())
+		deltaTime := currentFrame - lastFrame
+		lastFrame = currentFrame
+
+		speed := cameraSpeed * deltaTime
 		// Check for keyboard/mouse events
 		glfw.PollEvents()
+
+		if wnd.GetKey(glfw.KeyW) == glfw.Press {
+			cameraPos = cameraPos.Add(cameraFront.Mul(speed))
+		}
+		if wnd.GetKey(glfw.KeyS) == glfw.Press {
+			cameraPos = cameraPos.Sub(cameraFront.Mul(speed))
+		}
+		if wnd.GetKey(glfw.KeyA) == glfw.Press {
+			right := cameraFront.Cross(cameraUp).Normalize()
+			cameraPos = cameraPos.Sub(right.Mul(speed))
+		}
+		if wnd.GetKey(glfw.KeyD) == glfw.Press {
+			right := cameraFront.Cross(cameraUp).Normalize()
+			cameraPos = cameraPos.Add(right.Mul(speed))
+		}
 		//ear the screen with a dark green-ish color
 		gl.ClearColor(0.2, 0.3, 0.3, 1.0)
 		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
@@ -92,9 +117,10 @@ func main() {
 		shader.SetIntUniform("Texture2", 1)
 
 		shader.SetMat4Uniform("projection", projection)
+		view := mgl32.LookAtV(cameraPos, cameraPos.Add(cameraFront), cameraUp)
 		shader.SetMat4Uniform("view", view)
 		for i := range 10 {
-			model = mgl32.Translate3D(cubePositions[i].X(), cubePositions[i][1], cubePositions[i].Z())
+			model = mgl32.Translate3D(planePositions[i].X(), planePositions[i].Y(), planePositions[i].Z())
 			angle := float32(20) * float32(i)
 			rotation := mgl32.HomogRotate3D(angle, mgl32.Vec3{1, 0.3, 0.5})
 			model = model.Mul4(rotation)
