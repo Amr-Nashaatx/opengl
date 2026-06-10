@@ -3,6 +3,7 @@ package main
 import (
 	"unsafe"
 
+	c "github.com/Amr-Nashaatx/opengl/camera"
 	"github.com/Amr-Nashaatx/opengl/glbuffers"
 	"github.com/Amr-Nashaatx/opengl/shaders"
 	"github.com/Amr-Nashaatx/opengl/textures"
@@ -56,10 +57,6 @@ func main() {
 
 	// Transformation --> Model -> View -> Projection
 	model := mgl32.Ident4()
-	projection := mgl32.Perspective(45, float32(wndProps.Width)/float32(wndProps.Height), 0.1, 100.0)
-	cameraPos := mgl32.Vec3{0, 0, 3}
-	cameraFront := mgl32.Vec3{0, 0, -1}
-	cameraUp := mgl32.Vec3{0, 1, 0}
 
 	// Enable Depth Testing
 	gl.Enable(gl.DEPTH_TEST)
@@ -81,34 +78,39 @@ func main() {
 		{1.5, 0.2, -1.5},
 		{-1.3, 1.0, -1.5},
 	}
-	// Frame delta-time
+	camera := c.New()
+
+	wnd.SetScrollCallback(func(w *glfw.Window, xoff, yoff float64) {
+		camera.ProcessMouseScroll(float32(yoff))
+	})
+	wnd.SetCursorPosCallback(func(w *glfw.Window, xpos, ypos float64) {
+		x, y := float32(xpos), float32(ypos)
+		camera.ProcessMouseMovement(x, y)
+	})
+
 	lastFrame := float32(0)
-	cameraSpeed := float32(2.5)
-	// 6. The render loop
+	wnd.SetInputMode(glfw.CursorMode, glfw.CursorDisabled)
+
 	for !wnd.ShouldClose() {
 		currentFrame := float32(glfw.GetTime())
 		deltaTime := currentFrame - lastFrame
 		lastFrame = currentFrame
 
-		speed := cameraSpeed * deltaTime
 		// Check for keyboard/mouse events
 		glfw.PollEvents()
 
 		if wnd.GetKey(glfw.KeyW) == glfw.Press {
-			cameraPos = cameraPos.Add(cameraFront.Mul(speed))
+			camera.ProcessKeyboard(c.Forward, deltaTime)
 		}
 		if wnd.GetKey(glfw.KeyS) == glfw.Press {
-			cameraPos = cameraPos.Sub(cameraFront.Mul(speed))
+			camera.ProcessKeyboard(c.Backward, deltaTime)
 		}
 		if wnd.GetKey(glfw.KeyA) == glfw.Press {
-			right := cameraFront.Cross(cameraUp).Normalize()
-			cameraPos = cameraPos.Sub(right.Mul(speed))
+			camera.ProcessKeyboard(c.Left, deltaTime)
 		}
 		if wnd.GetKey(glfw.KeyD) == glfw.Press {
-			right := cameraFront.Cross(cameraUp).Normalize()
-			cameraPos = cameraPos.Add(right.Mul(speed))
+			camera.ProcessKeyboard(c.Right, deltaTime)
 		}
-		//ear the screen with a dark green-ish color
 		gl.ClearColor(0.2, 0.3, 0.3, 1.0)
 		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
@@ -116,8 +118,9 @@ func main() {
 		shader.SetIntUniform("Texture1", 0)
 		shader.SetIntUniform("Texture2", 1)
 
+		projection := mgl32.Perspective(mgl32.DegToRad(camera.GetFov()), float32(wndProps.Width)/float32(wndProps.Height), 0.1, 100.0)
 		shader.SetMat4Uniform("projection", projection)
-		view := mgl32.LookAtV(cameraPos, cameraPos.Add(cameraFront), cameraUp)
+		view := camera.GetViewMatrix()
 		shader.SetMat4Uniform("view", view)
 		for i := range 10 {
 			model = mgl32.Translate3D(planePositions[i].X(), planePositions[i].Y(), planePositions[i].Z())
